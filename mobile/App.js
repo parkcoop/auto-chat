@@ -7,7 +7,6 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import type {Node} from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -29,9 +28,10 @@ const Dashboard = ({ navigation }) => {
   const [room, setRoom] = useState('')
 
   useEffect(() => {
-    signup({username: "LOL", password: "LOL"}).then(res => console.log(res))
-
+    
     (async() => {
+      let lol = await signup({username: "LOL", password: "LOL"})
+      console.log(lol)
       try {
         const currentUsername = await AsyncStorage.getItem('username')
         if (currentUsername) {
