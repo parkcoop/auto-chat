@@ -1,12 +1,5 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow strict-local
- */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useReducer } from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -19,99 +12,95 @@ import { createAppContainer } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { signup } from './src/api';
+import AppRouter from './src/router';
+import { AuthContext, LoadingContext, SessionContext } from './src/context';
+import Authenticate from './src/screens/Authenticate';
+import moment from 'moment'
 
-
-
-const Dashboard = ({ navigation }) => {
-  const [username, setUsername] = useState('')
-  const [loggedIn, setLoggedIn] = useState(false)
-  const [room, setRoom] = useState('')
+const App = () => {
+  const [loading, setLoading] = useState(false)
+  const [session, dispatch] = useReducer(
+    (prevState, action) => {
+      switch (action.type) {
+        case 'RESTORE_TOKEN':
+          console.log("RESTORING TOKEN")
+          return {
+            ...prevState,
+            token: action.token,
+            isLoading: false,
+            user: action.user,
+          }
+        case 'SIGN_IN':
+          return {
+            ...prevState,
+            isSignout: false,
+            token: action.token,
+            user: action.user,
+          }
+        case 'SIGN_OUT':
+          (async () => {
+            await AsyncStorage.removeItem('userToken')
+          })()
+          return {
+            ...prevState,
+            isSignout: true,
+            token: null,
+            user: null,
+          }
+        default: return {}
+      }
+    },
+    {
+      isLoading: true,
+      isSignout: false,
+      token: null,
+      user: null,
+    },
+  )
 
   useEffect(() => {
-    
-    (async() => {
-      let lol = await signup({username: "LOL", password: "LOL"})
-      console.log(lol)
-      try {
-        const currentUsername = await AsyncStorage.getItem('username')
-        if (currentUsername) {
-          console.log(currentUsername)
-          setUsername(currentUsername)
-          setLoggedIn(true)
-        }
-      } catch(err) {
-        console.log("Error getting username", err)
-      }
+    const checkToken = async () => {
+      let user
+      let userToken
+      let tokenExpiration
+      // await AsyncStorage.removeItem('userToken')
+      // await AsyncStorage.removeItem('tokenExpiration')
 
-    })()
+      try {
+        userToken = await AsyncStorage.getItem('userToken')
+        tokenExpiration = await AsyncStorage.getItem('tokenExpiration')
+        console.log('Expires in: (minutes) ', moment.unix(tokenExpiration).diff(moment(), 'minutes'))
+        if ((moment().diff(moment.unix(tokenExpiration), 'minutes') > 0) || !tokenExpiration) {
+          await AsyncStorage.removeItem('userToken')
+          await AsyncStorage.removeItem('tokenExpiration')
+          userToken = null
+        }
+      } catch (err) {
+        console.log('error retrieving token', err)
+      }
+      if (userToken && userToken !== 'undefined') {
+        user = await AsyncStorage.getItem('user')
+        user = JSON.parse(user)
+      }
+      console.log("ARE WE RESTORING", userToken, user)
+      dispatch({ type: 'RESTORE_TOKEN', token: userToken, user: user })
+    }
+
+    checkToken()
   }, [])
 
-  const login = () => {
-    (async() => {
-      try {
-        await AsyncStorage.setItem('username', username)
-      } catch(err) {
-        console.log('Error setting username in asyncstorage', err)
-      }
-    })()
-    setLoggedIn(true)
-  }
 
-  if (loggedIn) {
-    return (<View style={{paddingTop: 100, marginTop: 100}}><Text>Welcome, {username}</Text></View>)
-  }
-
-  else {
-    return (
-      <SafeAreaView style={styles.container}>
-         <Text style={styles.text}>Join room</Text>
-         <TextInput 
-           style={styles.input} 
-           value={username}
-           placeholder="Enter username"
-           onChangeText={(text) => setUsername(text)}
-         />
-         <TextInput 
-           style={styles.input} 
-           value={room}
-           placeholder="Enter room ID"
-           onChangeText={(text) => setRoom(text)}
-         />
-         <TouchableOpacity
-           style={{backgroundColor: '#CDCDCD', color: 'white', padding: 10}}
-           onPress={() => login()}
-         >
-           <Text>
-             Enter room
-           </Text>
-         </TouchableOpacity>
-      </SafeAreaView>
-     );
-  }
-};
-
-const Room = ({ navigation }) => {
   return (
-    <SafeAreaView>
-      <Text>OMG</Text>
-    </SafeAreaView>
+    <AuthContext.Provider value={dispatch}>
+      <SessionContext.Provider value={session}>
+          <LoadingContext.Provider value={{ loading, setLoading }}>
+            {loading ? <View><Text>LOADING</Text></View> : session.user ? <AppRouter /> : <Authenticate />}
+          </LoadingContext.Provider>
+      </SessionContext.Provider>
+    </AuthContext.Provider>
   )
 }
 
-const AppNavigator = createStackNavigator({
-  Home: {
-    screen: Dashboard,
-  },
-  Room: {
-    screen: Room
-  }
-});
+export default App
 
-export default createAppContainer(AppNavigator);
-
-const styles = StyleSheet.create({
-  container: {backgroundColor: '#333', height: '100%', width: '100%', flex: 1, alignItems: 'center', justifyContent: 'center'},
-  text: {color: 'white', fontSize: 25, textAlign: 'center', marginBottom: '10%'},
-  input: { backgroundColor: 'white', width: '50%', padding: 10, borderRadius: 2, marginBottom: 20 },
-});
 

@@ -86,6 +86,22 @@ router.post("/login", (req, res, next) => {
 });
 
 
+router.post("/usercheck", (req, res, next) => {
+    const token = req.body.entity;
+    jwt.verify(token, process.env.APP_SECRET, (err, entity) => {
+        if (err) {
+            return Promise.reject(err);
+        }
+        return Promise.resolve(entity);
+    })
+    .then((entity) => {
+        res.status(200).json(entity);
+    })
+    .catch((err) => {
+        res.status(200).json(err);
+    });
+});
+
 
 
 module.exports = router
