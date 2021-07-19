@@ -3,8 +3,8 @@ import { Modal, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableO
 import { FlatList } from 'react-native-gesture-handler';
 
 
-const MessageInput = ({ sendMessage, messageInput, setMessageInput }) => {
-  
+const MessageInput = ({ sendMessage }) => {
+  const [messageInput, setMessageInput] = useState('')
 
 
   
@@ -16,7 +16,7 @@ const MessageInput = ({ sendMessage, messageInput, setMessageInput }) => {
         style={{backgroundColor: '#DDD', borderColor: '#111', padding: 10, width: '65%', borderRadius: 5}}
       />
       <TouchableOpacity
-        onPress={() => sendMessage()}
+        onPress={() => sendMessage(messageInput, () => setMessageInput(""))}
         style={{
           backgroundColor: '#CDCDCD',
           padding: 10,

@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import React, { useState, useContext, useEffect } from 'react'
 import { Modal, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native"
@@ -19,6 +20,10 @@ const Inbox = () => {
 
   useEffect(() => {
     (async() => {
+      let savedConversations = await AsyncStorage.getItem('conversations')
+      if (savedConversations) {
+        setConversations(JSON.parse(savedConversations))
+      }
       let previousConversations = await getConversations({ username: user.username })
       console.log(previousConversations.data)
       previousConversations.data.forEach(item => console.log(item.members))
@@ -27,6 +32,11 @@ const Inbox = () => {
     })()
 
   }, [])
+
+  useEffect(() => {
+    if (!conversations.length) return
+    AsyncStorage.setItem('conversations', JSON.stringify(conversations))
+  }, [conversations])
 
   
   const Item = ({ item, navigation }) => (

@@ -15,6 +15,7 @@ import Authenticate from './src/screens/Authenticate';
 import moment from 'moment'
 import MessagesRouter from './src/screens/MessagesRouter';
 import { NavigationContainer } from '@react-navigation/native';
+import { io } from "socket.io-client";
 
 const App = () => {
   const [loading, setLoading] = useState(false)
@@ -86,6 +87,20 @@ const App = () => {
     }
 
     checkToken()
+
+    
+    const socket = io("https://loud-sloth-90.loca.lt");
+    // setCurrentSocket(socket)
+
+    socket.on("connect", msg => {
+      console.log("Connected", msg)
+    })
+    
+    socket.on("chat message", (msg) => {
+      console.log('Received on client', msg)
+    })
+
+    
   }, [])
 
 
