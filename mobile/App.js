@@ -8,14 +8,13 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { createAppContainer } from 'react-navigation';
-import { createStackNavigator } from 'react-navigation-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { signup } from './src/api';
-import AppRouter from './src/router';
-import { AuthContext, LoadingContext, SessionContext } from './src/context';
+import { AuthContext, LoadingContext, SessionContext, ConversationContext } from './src/context';
 import Authenticate from './src/screens/Authenticate';
 import moment from 'moment'
+import MessagesRouter from './src/screens/MessagesRouter';
+import { NavigationContainer } from '@react-navigation/native';
 
 const App = () => {
   const [loading, setLoading] = useState(false)
@@ -94,7 +93,9 @@ const App = () => {
     <AuthContext.Provider value={dispatch}>
       <SessionContext.Provider value={session}>
           <LoadingContext.Provider value={{ loading, setLoading }}>
-            {loading ? <View><Text>LOADING</Text></View> : session.user ? <AppRouter /> : <Authenticate />}
+            <NavigationContainer>
+              {loading ? <View><Text>LOADING</Text></View> : session.user ? <MessagesRouter /> : <Authenticate />}
+            </NavigationContainer>
           </LoadingContext.Provider>
       </SessionContext.Provider>
     </AuthContext.Provider>

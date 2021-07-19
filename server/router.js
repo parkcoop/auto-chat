@@ -5,6 +5,8 @@ const jwt = require("jsonwebtoken");
 const moment = require("moment");
 const passport = require("passport");
 const User = require("./schema/User");
+const Conversation = require('./schema/Conversation');
+const Message = require('./schema/Message');
 
 
 router.get('/', (req, res, next) => {
@@ -102,6 +104,35 @@ router.post("/usercheck", (req, res, next) => {
     });
 });
 
+router.get('/conversations', async (req, res) => {
+  const { username } = req.body
+  const conversations = await Conversation.find({
+    'Conversation.members': username
+  })
+  return res.status(200).json(conversations)
+})
+
+router.post('/conversation', async (req, res) => {
+  const { members } = req.body
+  const newConversation = new Conversation({ members })
+  await newConversation.save()
+  return res.status(200).json(newConversation)
+})
+
+
+router.get('/messages', async (req, res) => {
+  const { conversationId } = req.query
+  const messages = await Message.find({
+    conversationId
+  }).sort({createdAt: -1})
+  return res.status(200).json(messages)
+})
+router.post('/message', async (req, res) => {
+  const message = req.body
+  const newMessage = new Message(message)
+  await newMessage.save()
+  return res.status(200).json(newMessage)
+})
 
 
 module.exports = router

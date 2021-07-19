@@ -1,18 +1,41 @@
 const express = require('express')
 const socketio = require('socket.io')
 const http = require('http')
-
-const PORT = process.env.PORT | 5000
 const mongoose = require('mongoose')
-const app = express()
-const server = http.createServer(app)
-const io = socketio(server)
 const passport = require("passport");
 
+const Message = require("./schema/Message");
+
+
+const PORT = process.env.PORT | 5000
 require('dotenv').config()
 
+
+const app = express()
+const server = http.createServer(app)
+
+
+const io = socketio(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+})
+
+
+
 io.on('connection', (socket) => {
-  console.log("New connection", socket)
+  console.log("New connection")
+
+  socket.on("chat message", (msg) => {
+    console.log('on server', msg);
+    if (!msg.body) return
+    const newMessage = new Message(msg)
+    newMessage.save()
+    io.emit("chat message", msg);
+  });
+
 
   socket.on('disconnect', () => {
     console.log("Disconnected from socket")
