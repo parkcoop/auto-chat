@@ -3,14 +3,14 @@ import { useNavigation } from '@react-navigation/native';
 import React, { useState, useContext, useEffect } from 'react'
 import { Modal, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native"
 import { FlatList } from 'react-native-gesture-handler';
-import { getConversations } from '../../api';
+import { getConversations, newConversation } from '../../api';
 import { ConversationContext, SessionContext } from '../../context';
 
 
 const Inbox = () => {
   const navigation = useNavigation()
 
-
+  const [newConversationInput, setNewConversationInput] = useState('')
   const [modalVisible, setModalVisible] = useState(false);
   const [conversations, setConversations] = useState([])
 
@@ -20,13 +20,11 @@ const Inbox = () => {
 
   useEffect(() => {
     (async() => {
-      let savedConversations = await AsyncStorage.getItem('conversations')
+      let savedConversations = await AsyncStorage.removeItem('conversations')
       if (savedConversations) {
         setConversations(JSON.parse(savedConversations))
       }
       let previousConversations = await getConversations({ username: user.username })
-      console.log(previousConversations.data)
-      previousConversations.data.forEach(item => console.log(item.members))
       setConversations(previousConversations.data)
 
     })()
@@ -47,7 +45,7 @@ const Inbox = () => {
     }}
       
       >
-      <Text style={styles.title}>{item.members?.toString()}</Text>
+      <Text style={styles.title}>{item.members?.filter(item => item !== user.username).toString()}</Text>
     </TouchableOpacity>
   );
 
@@ -57,6 +55,14 @@ const Inbox = () => {
     <Item navigation={navigation} item={item} />
   )};
 
+  const startConversation = async() => {
+    let members = newConversationInput.toLowerCase().split(',')
+    members = members.map(item => item.trim())
+    members.push(user.username)
+    let conversation = await newConversation({ members })
+    console.log('newwww', conversation.data)
+    setNewConversationInput('')
+  }
 
 
   return (
@@ -82,11 +88,18 @@ const Inbox = () => {
       >
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
-            <Text style={styles.modalText}>Enter recipient's username</Text>
-            <TextInput style={{borderColor: 'black', padding: 15, backgroundColor: '#CDCDCD', margin: 10, width: '75%', textAlign: 'center'}} />
+            <Text style={styles.modalText}>Enter recipient's username, or multiple usernames separated by a comma</Text>
+            <TextInput 
+              value={newConversationInput}
+              onChangeText={setNewConversationInput}
+              style={{borderColor: 'black', padding: 15, backgroundColor: '#CDCDCD', margin: 10, width: '75%', textAlign: 'center'}} 
+            />
             <TouchableOpacity
               style={[styles.button, styles.buttonClose]}
-              onPress={() => setModalVisible(!modalVisible)}
+              onPress={() => {
+                startConversation()
+                setModalVisible(!modalVisible)
+              }}
             >
               <Text style={styles.textStyle}>Chat</Text>
             </TouchableOpacity>
@@ -121,7 +134,7 @@ const styles = StyleSheet.create({
   modalView: {
     margin: 20,
     backgroundColor: "white",
-    borderRadius: 20,
+    borderRadius: 5,
     padding: 35,
     width: '85%',
     alignItems: "center",

@@ -5,6 +5,7 @@ import { FlatList } from 'react-native-gesture-handler';
 
 const MessageInput = ({ sendMessage }) => {
   const [messageInput, setMessageInput] = useState('')
+  console.log('messageslist render')
 
 
   

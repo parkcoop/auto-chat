@@ -3,34 +3,48 @@ import { Modal, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableO
 import { FlatList } from 'react-native-gesture-handler';
 import MessageInput from './components/MessageInput';
 import MessagesList from './components/MessagesList';
-import { io } from "socket.io-client";
 import { ConversationContext, SessionContext } from '../../context';
+import { SocketContext } from '../../context/socket';
 import 'react-native-get-random-values';
 
-import { v4 as uuidv4 } from 'uuid';
 import { getConversations, getMessages } from '../../api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 const Conversation = ({ navigation }) => {
-  
-  
-  
   const { user } = useContext(SessionContext)
   const { currentConversation } = useContext(ConversationContext)
+  const socket = useContext(SocketContext)
   const [userMessages, setUserMessages] = useState([])
-  console.log('render')
+  console.log('messages render')
 
+  useEffect(() => {
+    socket.on("chat message", (msg) => {
+      if (msg.conversationId === currentConversation._id) {
+        setUserMessages((prev) => {
+          console.log("Setting messages from previous state", prev)
+          if (!prev) return [msg]
+          return [ msg, ...prev ]
+        
+        })
+      }
+    });
+  }, [socket])
 
   useEffect(() => {
     let isSubscribed = true;
 
     (async () => {
-      let savedMessages = await AsyncStorage.getItem(currentConversation._id)  
-      setUserMessages(JSON.parse(savedMessages))
-      const previousMessages = await getMessages({ conversationId: currentConversation._id })
-      if (previousMessages.data && isSubscribed) {
-        setUserMessages(previousMessages.data)
+      try {
+        let savedMessages = await AsyncStorage.getItem(currentConversation._id)  
+        setUserMessages(JSON.parse(savedMessages))
+        const previousMessages = await getMessages({ conversationId: currentConversation._id })
+        if (previousMessages?.data && isSubscribed && previousMessages.data.length !== savedMessages?.length) {
+          if (!isSubscribed) return
+          setUserMessages(previousMessages.data)
+        }
+      } catch(err) {
+        console.log(err)
       }
 
     })()
@@ -39,14 +53,8 @@ const Conversation = ({ navigation }) => {
 
     return () => {
       isSubscribed = false
-      // socket.disconnect()
-      // setCurrentSocket(null)
-      // console.log("SETTING", userMessages)
-      (async() => {
-        // await AsyncStorage.setItem(currentConversation._id, JSON.stringify(userMessages))
-      })()
     }
-  }, [])
+  }, [currentConversation])
 
   useEffect(() => {
     if (!userMessages?.length) return
@@ -61,7 +69,7 @@ const Conversation = ({ navigation }) => {
       body: messageInput,
     }
     // console.log("SENDING", newMessage, currentSocket)
-    // currentSocket.emit('chat message', newMessage)
+    socket.emit('chat message', newMessage)
     cb()
   }
   

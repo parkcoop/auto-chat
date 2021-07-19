@@ -18,6 +18,7 @@ router.get('/', (req, res, next) => {
 router.post("/signup", async (req, res, next) => {
   console.log(req.body);
   let { username, password } = req.body;
+  username = username.toLowerCase()
   try {
       if (!username || !password) {
           res.status(500);
@@ -72,7 +73,7 @@ router.post("/login", (req, res, next) => {
           res.status(401).json(failureDetails);
           return;
       }
-
+      user.username = user.username.toLowerCase()
       req.login(user, (err) => {
           if (err) {
               res.status(500).json({ message: "Session save went bad." });
@@ -105,15 +106,29 @@ router.post("/usercheck", (req, res, next) => {
 });
 
 router.get('/conversations', async (req, res) => {
-  const { username } = req.body
+  const { username } = req.query
+  console.log("LKOL", username)
   const conversations = await Conversation.find({
-    'Conversation.members': username
+    'members': username
   })
   return res.status(200).json(conversations)
 })
 
 router.post('/conversation', async (req, res) => {
-  const { members } = req.body
+  let { members } = req.body
+  if (!members.length) {
+    return res.status(200).json({msg: "Pass an array of members"})
+  }
+  // Sort members array so can easily query all conversations for these members (in diff order can be expensive)
+  members = members.sort()
+  console.log(members)
+
+  let conversationMatches = await Conversation.find({ "members": { "$size" : members.length, "$all": members }  })
+  if (conversationMatches.length) {
+    console.log("EXISTS")
+    return res.status(300).json({msg: 'Conversation exists', data: conversationMatches[0]})
+  }
+
   const newConversation = new Conversation({ members })
   await newConversation.save()
   return res.status(200).json(newConversation)

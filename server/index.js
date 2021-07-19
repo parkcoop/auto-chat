@@ -31,8 +31,8 @@ io.on('connection', (socket) => {
   socket.on("chat message", (msg) => {
     console.log('on server', msg);
     if (!msg.body) return
-    // const newMessage = new Message(msg)
-    // newMessage.save()
+    const newMessage = new Message(msg)
+    newMessage.save()
     io.emit("chat message", msg);
   });
 

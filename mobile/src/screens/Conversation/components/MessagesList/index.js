@@ -9,6 +9,7 @@ const MessagesList = ({ data }) => {
   const theirId = 456
   const { currentConversation } = useContext(ConversationContext)
   const { user } = useContext(SessionContext)
+  console.log('messageslist render')
   
   
   const Item = ({ item, navigation }) => {

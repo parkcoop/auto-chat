@@ -11,6 +11,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { signup } from './src/api';
 import { AuthContext, LoadingContext, SessionContext, ConversationContext } from './src/context';
+import { SocketContext, socket } from './src/context/socket';
 import Authenticate from './src/screens/Authenticate';
 import moment from 'moment'
 import MessagesRouter from './src/screens/MessagesRouter';
@@ -58,6 +59,7 @@ const App = () => {
     },
   )
 
+
   useEffect(() => {
     const checkToken = async () => {
       let user
@@ -88,17 +90,7 @@ const App = () => {
 
     checkToken()
 
-    
-    const socket = io("https://loud-sloth-90.loca.lt");
-    // setCurrentSocket(socket)
 
-    socket.on("connect", msg => {
-      console.log("Connected", msg)
-    })
-    
-    socket.on("chat message", (msg) => {
-      console.log('Received on client', msg)
-    })
 
     
   }, [])
@@ -108,9 +100,11 @@ const App = () => {
     <AuthContext.Provider value={dispatch}>
       <SessionContext.Provider value={session}>
           <LoadingContext.Provider value={{ loading, setLoading }}>
-            <NavigationContainer>
-              {loading ? <View><Text>LOADING</Text></View> : session.user ? <MessagesRouter /> : <Authenticate />}
-            </NavigationContainer>
+            <SocketContext.Provider value={socket}>
+              <NavigationContainer>
+                {loading ? <View><Text>LOADING</Text></View> : session.user ? <MessagesRouter /> : <Authenticate />}
+              </NavigationContainer>
+            </SocketContext.Provider>
           </LoadingContext.Provider>
       </SessionContext.Provider>
     </AuthContext.Provider>
