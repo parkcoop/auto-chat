@@ -4,30 +4,42 @@ import React, { useState, useContext, useEffect } from 'react'
 import { Modal, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native"
 import { FlatList } from 'react-native-gesture-handler';
 import { getConversations, newConversation } from '../../api';
-import { ConversationContext, SessionContext } from '../../context';
+import { AuthContext, ConversationContext, SessionContext } from '../../context';
 
 
 const Inbox = () => {
   const navigation = useNavigation()
 
   const [newConversationInput, setNewConversationInput] = useState('')
-  const [modalVisible, setModalVisible] = useState(false);
+  const [newConversationModalVisible, setNewConversationModalVisible] = useState(false);
+  const [signoutModalVisible, setSignoutModalVisible] = useState(false);
   const [conversations, setConversations] = useState([])
 
   const { setCurrentConversation } = useContext(ConversationContext)
   const { user } = useContext(SessionContext)
+  const dispatch = useContext(AuthContext)
 
 
   useEffect(() => {
+    let isSubscribed = true;
     (async() => {
-      let savedConversations = await AsyncStorage.removeItem('conversations')
-      if (savedConversations) {
-        setConversations(JSON.parse(savedConversations))
+      try {
+        let savedConversations = await AsyncStorage.removeItem('conversations')
+        if (savedConversations) {
+          if (!isSubscribed) return
+          setConversations(JSON.parse(savedConversations))
+        }
+        let previousConversations = await getConversations({ username: user.username })
+        if (!isSubscribed) return
+        setConversations(previousConversations.data)
+      } catch(err) {
+        console.log(err)
       }
-      let previousConversations = await getConversations({ username: user.username })
-      setConversations(previousConversations.data)
-
     })()
+
+    return () => {
+      isSubscribed = false
+    }
 
   }, [])
 
@@ -39,9 +51,8 @@ const Inbox = () => {
   
   const Item = ({ item, navigation }) => (
     <TouchableOpacity style={styles.item} onPress={() => {
-      console.log("GO"); 
-      navigation.push('Conversation')
-      setCurrentConversation(item)
+      navigation.push('Conversation');
+      setCurrentConversation(item);
     }}
       
       >
@@ -50,26 +61,38 @@ const Inbox = () => {
   );
 
   const renderItem = ({ item }) => {
-    console.log(item)
     return (
     <Item navigation={navigation} item={item} />
   )};
 
   const startConversation = async() => {
-    let members = newConversationInput.toLowerCase().split(',')
-    members = members.map(item => item.trim())
-    members.push(user.username)
-    let conversation = await newConversation({ members })
-    console.log('newwww', conversation.data)
-    setNewConversationInput('')
+    if (!newConversationInput.trim()) {
+      setNewConversationInput("")
+      return
+    }
+    try {
+      let members = newConversationInput.toLowerCase().split(',')
+      members = members.map(item => item.trim())
+      members.push(user.username)
+      let conversation = await newConversation({ members })
+      setNewConversationInput('')
+      setCurrentConversation(conversation.data)
+      navigation.navigate('Conversation')
+      setConversations((prev) => prev.concat(conversation.data))
+    } catch(err) {
+      console.log(err)
+    }
   }
 
 
   return (
-    <SafeAreaView style={{backgroundColor: '#333'}}>
+    <SafeAreaView style={{backgroundColor: '#333', height: '100%'}}>
       <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 15}}>
-        <Text style={{fontSize: 25, color: 'white'}}>Current chats</Text>
-        <TouchableOpacity onPress={() => setModalVisible(true)}><Text style={{fontSize: 25}}>+</Text></TouchableOpacity>
+        <Text style={{fontSize: 25, color: 'white'}}>inbox</Text>
+        <View style={{flexDirection: 'row'}}>
+          <TouchableOpacity onPress={() => setNewConversationModalVisible(true)}><Text style={{fontSize: 25, color: '#DDD', marginLeft: 25}}>+</Text></TouchableOpacity>
+          <TouchableOpacity onPress={() => setSignoutModalVisible(true)}><Text style={{fontSize: 25, color: '#DDD', marginLeft: 25}}>signout</Text></TouchableOpacity>
+        </View>
       </View>
       {conversations.length ? <FlatList
         style={{height: '100%'}}
@@ -80,10 +103,10 @@ const Inbox = () => {
       <Modal
         animationType="slide"
         transparent={true}
-        visible={modalVisible}
+        visible={newConversationModalVisible}
         onRequestClose={() => {
           Alert.alert("Modal has been closed.");
-          setModalVisible(!modalVisible);
+          setNewConversationModalVisible(!newConversationModalVisible);
         }}
       >
         <View style={styles.centeredView}>
@@ -92,16 +115,56 @@ const Inbox = () => {
             <TextInput 
               value={newConversationInput}
               onChangeText={setNewConversationInput}
-              style={{borderColor: 'black', padding: 15, backgroundColor: '#CDCDCD', margin: 10, width: '75%', textAlign: 'center'}} 
+              style={{borderColor: 'black', padding: 15, backgroundColor: '#EEE', margin: 10, width: '75%', textAlign: 'center', borderRadius: 4}} 
             />
             <TouchableOpacity
               style={[styles.button, styles.buttonClose]}
               onPress={() => {
                 startConversation()
-                setModalVisible(!modalVisible)
+                setNewConversationModalVisible(!newConversationModalVisible)
               }}
             >
               <Text style={styles.textStyle}>Chat</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, styles.buttonClose]}
+              onPress={() => {
+                setNewConversationModalVisible(!newConversationModalVisible)
+              }}
+            >
+              <Text style={styles.textStyle}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={signoutModalVisible}
+        onRequestClose={() => {
+          Alert.alert("Modal has been closed.");
+          setSignoutModalVisible(!signoutModalVisible);
+        }}
+      >
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalText}>Confirm signout</Text>
+            <TouchableOpacity
+              style={[styles.button, styles.buttonClose]}
+              onPress={() => {
+                dispatch({type: "SIGN_OUT"})
+                setSignoutModalVisible(!signoutModalVisible)
+              }}
+            >
+              <Text style={styles.textStyle}>sign out</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, styles.buttonClose]}
+              onPress={() => {
+                setSignoutModalVisible(!signoutModalVisible)
+              }}
+            >
+              <Text style={styles.textStyle}>cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -148,15 +211,16 @@ const styles = StyleSheet.create({
     elevation: 5
   },
   button: {
-    borderRadius: 20,
+    borderRadius: 5,
     padding: 10,
-    elevation: 2
+    elevation: 2,
+    marginBottom: 10
   },
   buttonOpen: {
     backgroundColor: "#F194FF",
   },
   buttonClose: {
-    backgroundColor: "#2196F3",
+    backgroundColor: "#555",
   },
   textStyle: {
     color: "white",

@@ -19,16 +19,20 @@ const Conversation = ({ navigation }) => {
   console.log('messages render')
 
   useEffect(() => {
+    let isSubscribed = true
     socket.on("chat message", (msg) => {
       if (msg.conversationId === currentConversation._id) {
+        if (!isSubscribed) return
         setUserMessages((prev) => {
-          console.log("Setting messages from previous state", prev)
           if (!prev) return [msg]
           return [ msg, ...prev ]
-        
         })
       }
     });
+
+    return () => {
+      isSubscribed = false
+    }
   }, [socket])
 
   useEffect(() => {
@@ -48,9 +52,6 @@ const Conversation = ({ navigation }) => {
       }
 
     })()
-
-    
-
     return () => {
       isSubscribed = false
     }

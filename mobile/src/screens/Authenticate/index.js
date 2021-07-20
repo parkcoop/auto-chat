@@ -4,7 +4,7 @@ import moment from 'moment';
 import {AuthContext} from '../../context';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {login} from '../../api';
+import {login, signup} from '../../api';
 import {SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity} from 'react-native';
 
 const Authenticate = ({navigation}) => {
@@ -49,7 +49,7 @@ const Authenticate = ({navigation}) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.text}>Join room</Text>
+      <Text style={styles.text}>time for a chat</Text>
       <TextInput
         style={styles.input}
         value={username}
@@ -61,15 +61,28 @@ const Authenticate = ({navigation}) => {
         style={styles.input}
         autoCapitalize='none'
         value={password}
-        placeholder="Enter room ID"
+        secureTextEntry
+        placeholder="Enter password"
         onChangeText={text => setPassword(text)}
       />
       <TouchableOpacity
-        style={{backgroundColor: '#CDCDCD', color: 'white', padding: 10}}
+        style={{backgroundColor: '#EEE', padding: 10, marginBottom: 25, borderRadius: 4}}
         onPress={async () => {
           await signIn(username, password);
         }}>
-        <Text>Enter room</Text>
+        <Text>Sign in</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={{backgroundColor: '#eee', padding: 10, borderRadius: 4}}
+        onPress={async () => {
+          console.log("???")
+          let authPayload = await signup({username, password});
+          console.log('lol', authPayload)
+          await AsyncStorage.setItem('userToken', authPayload.token);
+          await AsyncStorage.setItem('user', JSON.stringify(authPayload.user));
+
+        }}>
+        <Text>New user</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -96,7 +109,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     width: '50%',
     padding: 10,
-    borderRadius: 2,
+    borderRadius: 4,
     marginBottom: 20,
   },
 });

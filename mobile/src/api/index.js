@@ -1,27 +1,27 @@
 import axios from 'axios'
 
 const login = ({ username, password }) => {
-  return axios.post('https://wicked-penguin-8.loca.lt/login', { username, password })
+  return axios.post('http://3.239.40.119/login', { username, password })
 }
 
 const signup = ({ username, password }) => {
-  return axios.post('https://wicked-penguin-8.loca.lt/signup', { username, password })
+  return axios.post('http://3.239.40.119/signup', { username, password })
 }
 
 const getMessages = ({ conversationId }) => {
-  return axios.get('https://wicked-penguin-8.loca.lt/messages?conversationId=' + conversationId)
+  return axios.get('http://3.239.40.119/messages?conversationId=' + conversationId)
 }
 
 // const newMessage = ({ conversationId, author, body }) => {
-//   return axios.get('https://wicked-penguin-8.loca.lt/messages', { conversationId, author, body })
+//   return axios.get('http://3.239.40.119/messages', { conversationId, author, body })
 // }
 
 const getConversations = ({ username }) => {
-  return axios.get('https://wicked-penguin-8.loca.lt/conversations?username=' + username)
+  return axios.get('http://3.239.40.119/conversations?username=' + username)
 }
 
 const newConversation = ({ members }) => {
-  return axios.post('https://wicked-penguin-8.loca.lt/conversation', { members })
+  return axios.post('http://3.239.40.119/conversation', { members })
 }
 
 export {

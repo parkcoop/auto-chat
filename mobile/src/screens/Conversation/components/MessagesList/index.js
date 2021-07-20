@@ -13,10 +13,36 @@ const MessagesList = ({ data }) => {
   
   
   const Item = ({ item, navigation }) => {
+    let userAuthored = item.author === user.username
     return (
-    <View style={{width: '70%', margin: 10, borderRadius: 5, padding: 10, ...item.author === user.username ? {backgroundColor: '#81afeb', alignSelf: 'flex-end'} : {backgroundColor: '#CDCDCD'}}}>
-      <Text style={item.sender == myId ? {color: 'white'} : {color: 'black'}}>{item.body}</Text>
-    </View>
+      <View>
+        {currentConversation.members.length > 2 ? (
+          <>
+            <Text style={{
+              width: '70%', 
+              margin: 10, 
+              marginBottom: 0, 
+              ...userAuthored ? 
+                { alignSelf: 'flex-end', textAlign: 'right' } : 
+                { textAlign: 'left' }}}
+              >
+                {item.author}
+            </Text>
+          </>
+        ) : null}
+        <View style={{
+          width: '70%', 
+          margin: 10, 
+          marginTop: 0, 
+          borderRadius: 5, 
+          padding: 10, 
+          ...userAuthored ? 
+            {backgroundColor: '#81afeb', alignSelf: 'flex-end'} : 
+            {backgroundColor: '#DDD'}}}
+        >
+          <Text style={userAuthored ? {color: 'white'} : {color: '#111'}}>{item.body}</Text>
+        </View>
+      </View>
   )
 
 };

@@ -2,7 +2,7 @@ import React from 'react'
 import io from "socket.io-client";
 import { SOCKET_URL } from "config";
 
-export const socket = io.connect('https://wicked-penguin-8.loca.lt');
+export const socket = io.connect('http://3.239.40.119');
 export const SocketContext = React.createContext();
 
     

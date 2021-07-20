@@ -126,7 +126,7 @@ router.post('/conversation', async (req, res) => {
   let conversationMatches = await Conversation.find({ "members": { "$size" : members.length, "$all": members }  })
   if (conversationMatches.length) {
     console.log("EXISTS")
-    return res.status(300).json({msg: 'Conversation exists', data: conversationMatches[0]})
+    return res.status(200).json(conversationMatches[0])
   }
 
   const newConversation = new Conversation({ members })

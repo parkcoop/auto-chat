@@ -39,9 +39,9 @@ const App = () => {
             user: action.user,
           }
         case 'SIGN_OUT':
-          (async () => {
-            await AsyncStorage.removeItem('userToken')
-          })()
+            AsyncStorage.removeItem('userToken')
+            AsyncStorage.removeItem('user')
+            AsyncStorage.removeItem('tokenExpiration')
           return {
             ...prevState,
             isSignout: true,
