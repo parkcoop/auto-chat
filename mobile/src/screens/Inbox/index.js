@@ -105,7 +105,6 @@ const Inbox = () => {
         transparent={true}
         visible={newConversationModalVisible}
         onRequestClose={() => {
-          Alert.alert("Modal has been closed.");
           setNewConversationModalVisible(!newConversationModalVisible);
         }}
       >
@@ -142,7 +141,6 @@ const Inbox = () => {
         transparent={true}
         visible={signoutModalVisible}
         onRequestClose={() => {
-          Alert.alert("Modal has been closed.");
           setSignoutModalVisible(!signoutModalVisible);
         }}
       >

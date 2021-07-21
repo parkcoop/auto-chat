@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react'
-import { Modal, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native"
+import { KeyboardAvoidingView, Modal, Platform, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native"
 import { FlatList } from 'react-native-gesture-handler';
 import MessageInput from './components/MessageInput';
 import MessagesList from './components/MessagesList';
@@ -48,6 +48,7 @@ const Conversation = ({ navigation }) => {
           setUserMessages(previousMessages.data)
         }
       } catch(err) {
+        // AsyncStorage.removeItem(currentConversation._id)  
         console.log(err)
       }
 
@@ -78,10 +79,14 @@ const Conversation = ({ navigation }) => {
 
   
   return (
-    <SafeAreaView style={{padding: 10, justifyContent: 'space-between', height: '100%'}}>
-        {/* <Text>{navigation.state?.params?.title || "New conversation"}</Text> */}
-        <MessagesList data={userMessages} />
-        <MessageInput sendMessage={sendMessage} />
+    <SafeAreaView style={{padding: 10, justifyContent: 'space-between', height: '90%'}}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' :'height'} keyboardVerticalOffset={100}>
+        {/* <ScrollView> */}
+          {/* <Text>{navigation.state?.params?.title || "New conversation"}</Text> */}
+          <MessagesList data={userMessages} />
+          <MessageInput sendMessage={sendMessage} />
+        {/* </ScrollView> */}
+      </KeyboardAvoidingView>
     </SafeAreaView>
   )
 

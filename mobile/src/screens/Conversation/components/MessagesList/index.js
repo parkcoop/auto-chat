@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react'
+import React, { useState, useContext, useRef } from 'react'
 import { Modal, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native"
 import { FlatList } from 'react-native-gesture-handler';
 import { ConversationContext, SessionContext } from '../../../../context';
@@ -6,6 +6,7 @@ import { ConversationContext, SessionContext } from '../../../../context';
 
 const MessagesList = ({ data }) => {
   const myId = 123
+  const listRef = useRef()
   const theirId = 456
   const { currentConversation } = useContext(ConversationContext)
   const { user } = useContext(SessionContext)
@@ -54,7 +55,14 @@ const MessagesList = ({ data }) => {
   
   return (
     <FlatList
+        style={{height:'100%'}}
+        nestedScrollEnabled
+        keyboardDismissMode="on-drag"
+        // keyboardShouldPersistTaps=""
+        onContentSizeChange={() => {
+          console.log(listRef); listRef.current.scrollToOffset({ animated: true, offset: 0 })}}
         inverted
+        ref={listRef}
         data={data}
         renderItem={renderItem}
         keyExtractor={item => item._id}

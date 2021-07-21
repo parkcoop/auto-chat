@@ -10,11 +10,10 @@ const MessageInput = ({ sendMessage }) => {
 
   
   return (
-    <View style={{flexDirection: 'row', justifyContent: 'space-around'}}>
+    <View style={{flexDirection: 'row', justifyContent: 'space-around', paddingTop: 10}}>
       <TextInput
         value={messageInput}
         onChangeText={setMessageInput}
-        placeholder="Enter message"
         style={{backgroundColor: '#DDD', borderColor: '#111', padding: 10, width: '65%', borderRadius: 5}}
       />
       <TouchableOpacity
